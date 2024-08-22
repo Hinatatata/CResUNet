@@ -306,16 +306,3 @@ class CRUNet(nn.Module):
         return output
 
 
-def get_parameter_number(model):
-    total_num = sum(p.numel() for p in model.parameters())
-    trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    return {'Total': total_num, 'Trainable': trainable_num}
-
-if __name__ == '__main__':
-
-    model = CRUNet(selected_dim=0,in_channels=10, out_channels=10,device='cuda')
-
-    print(model)
-    for name, parameters in model.named_parameters():
-        print(name, ':', parameters.size())
-    print(get_parameter_number(model))
