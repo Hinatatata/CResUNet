@@ -6,7 +6,7 @@ from config import experiment_params, data_params, model_params
 from data_creator import DataCreator
 from batch_generator import BatchGenerator
 from experiment import predict, train
-from models.baseline.CRU_net import CRUNet
+from models.baseline.CResU_net import CRUNet
 
 def run():
 
