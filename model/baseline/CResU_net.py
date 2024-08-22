@@ -9,8 +9,8 @@ class DepthwiseSeparableConv(nn.Module):
         super(DepthwiseSeparableConv, self).__init__()
 
         self.depthwise = nn.Conv2d(in_channels, in_channels * kernels_per_layer, kernel_size=kernel_size, padding=padding,
-                                   groups=in_channels)#逐通道卷积
-        self.pointwise = nn.Conv2d(in_channels * kernels_per_layer, output_channels, kernel_size=1)#逐点卷积
+                                   groups=in_channels)
+        self.pointwise = nn.Conv2d(in_channels * kernels_per_layer, output_channels, kernel_size=1)
 
     def forward(self, x):
         x = self.depthwise(x)
