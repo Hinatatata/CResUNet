@@ -1,8 +1,8 @@
 # CResUNet
 
-CResU-Net is a deep learning model that integrates coordinate attention mechanisms, multiple residual modules, and depthwise separable convolutions. 
+We propose a coordination attention residual U-Net(CResU-Net) model designed to better capture the dynamic spatiotemporal correlations of high-resolution SST. CResU-Net is a deep learning model that integrates coordinate attention mechanisms, multiple residual modules, and depthwise separable convolutions.
 
-File Structure
+## File Structure
 
 batch_generator.py: Handles batch generation for training.
 
