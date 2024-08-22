@@ -32,10 +32,10 @@ model_params = {
             "num_epochs": 100,
             "momentum": 0.7,
             "optimizer": "adam",
-            "weight_decay": 0.00023,
+            "weight_decay": 0.0002,
             "learning_rate": 0.0001,
             "clip": 5,
-            "early_stop_tolerance": 6
+            "early_stop_tolerance": 8
         },
         "core": {
             "selected_dim": 0,
