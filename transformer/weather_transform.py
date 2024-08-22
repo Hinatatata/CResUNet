@@ -165,14 +165,3 @@ class WeatherTransformer:
 
         return indices
 
-
-if __name__ == '__main__':
-
-    weather_tf = WeatherTransformer(check=False)
-
-    date_r = pd.date_range(start='2018-01-10', end='2019-01-12', freq='3H')
-    print('Total time length: ', len(date_r))
-    spat_r = [[40, 43], [-96, -89]]
-
-    ret_arr = weather_tf.transform_range(date_range=date_r, spatial_range=spat_r)
-    print(ret_arr.shape)
