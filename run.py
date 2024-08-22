@@ -6,24 +6,18 @@ from config import experiment_params, data_params, model_params
 from data_creator import DataCreator
 from batch_generator import BatchGenerator
 from experiment import predict, train
-from models.baseline.convlstm import ConvLSTM
-from models.baseline.u_net import UNet
 from models.baseline.CRU_net_3 import CRUNet
-from models.baseline.SmaAt_UNet import SmaAt_UNet
 
 def run():
 
-    val_ratio = experiment_params['val_ratio']  # 0.1
-    test_ratio = experiment_params['test_ratio']  # 0.1
-    normalize_flag = experiment_params['normalize_flag']  # True
+    val_ratio = experiment_params['val_ratio'] 
+    test_ratio = experiment_params['test_ratio'] 
+    normalize_flag = experiment_params['normalize_flag'] 
     model_name = experiment_params['model']
-    device = experiment_params['device']  # 'cuda'
+    device = experiment_params['device'] 
 
     model_dispatcher = {
-        'convlstm': ConvLSTM,
-        'u_net': UNet,
         'cru_net' : CRUNet,
-        'SmaAt_UNet':SmaAt_UNet
     }
 
 
@@ -55,7 +49,7 @@ def run():
                                      normalize_flag=normalize_flag)
 
     model = model_dispatcher[model_name](device=device, **selected_model_params)
-    '''
+
     print(f"Training {model_name} for the {date_range_str}")
     train(model_name=model_name,
           model=model,
@@ -64,12 +58,12 @@ def run():
           date_r=date_range_str,
           config=config,
           device=device)
-'''
+
 
     print(f"Predicting {model_name} for the {date_range_str}")
     try:
         predict(model_name=model_name, batch_generator=batch_generator, device=device
-                ,exp_num=12)
+                ,exp_num=1)
 
     except Exception as e:
         print(f"Couldnt perform prediction, the exception is {e}")
