@@ -3,7 +3,6 @@ import gc
 import netCDF4
 import numpy as np
 import pandas as pd
-from scipy import signal
 
 
 class WeatherTransformer:
@@ -18,7 +17,6 @@ class WeatherTransformer:
         self.downsample_mode = downsample_mode
         self.smooth = smooth
         self.smooth_win_len = smooth_win_len
-
         self.dates = self._get_file_dates()
         if check:
             self._check_filename_date_matching()
@@ -61,7 +59,7 @@ class WeatherTransformer:
             else:
                 day = str(day.day)
 
-            if int(year) < 2019 :
+            if int(year) < 2019:
                 file_name = year + month + day + '120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB_REP-v02.0-fv02.0.nc'
             else:
                 file_name = year + month + day + '120000-C3S-L4_GHRSST-SSTdepth-OSTIA-GLOB_ICDR2.0-v02.0-fv01.0.nc'
@@ -81,11 +79,11 @@ class WeatherTransformer:
 
             print('{:.2f}%'.format((count / len(file_dates)) * 100))
 
-            file_path = os.path.join(self.file_dir,file_name[0:4],file_name[4:6] ,file_name)
+            file_path = os.path.join(self.file_dir, file_name[0:4], file_name[4:6], file_name)
 
             nc = netCDF4.Dataset(file_path, 'r')
 
-            time_arr = np.array(nc['time'][:], dtype=np.int)
+            time_arr = np.array(nc['time'][:], dtype=np.int64)
 
             time_arr_list.append(time_arr)
 
@@ -97,7 +95,6 @@ class WeatherTransformer:
                     subset_arr = nc.variables[key][:]
                     subset_arr = subset_arr[:, self.atm_dim]
                     # atm_dim=-1
-
                     split_arr = np.split(subset_arr, range(self.freq, len(subset_arr), self.freq), axis=0)
                     split_arr = np.stack(split_arr, axis=0)
                     if self.downsample_mode == "average":
@@ -111,20 +108,19 @@ class WeatherTransformer:
                 data_arr = np.stack(arr_list, axis=-1)
             data_arr_list.append(data_arr)
 
-
+            # since files are big, garbage collect the unref. files
             gc.collect()
 
-
-
+        # combine all arrays on time dimension
         data_combined = np.concatenate(data_arr_list, axis=0)
         time_combined = np.concatenate(time_arr_list, axis=0)
         time_combined = time_combined[range(0, len(time_combined), self.freq)]
 
-
+        # temporal crop
         temporal_idx = self._crop_temporal(time_combined, date_range)
         data_cropped = data_combined[temporal_idx]
 
-
+        # save data for each timestamp
         date_range = pd.Series(date_range)
         date_str = date_range.apply(lambda x: x.strftime('%Y-%m-%d_%H'))
         for i in range(len(data_cropped)):
@@ -134,7 +130,6 @@ class WeatherTransformer:
         return data_cropped
 
     def _crop_spatial(self, data, in_range):
-
 
         lats = data['lat'][:]
         lons = data['lon'][:]
@@ -150,6 +145,7 @@ class WeatherTransformer:
             split_arr = np.split(subset_arr, range(self.freq, len(subset_arr), self.freq), axis=0)
             time_avg_arr = np.sum(np.stack(split_arr, axis=0), axis=1)
             arr_list.append(np.array(time_avg_arr))
+
         data_combined = np.stack(arr_list, axis=-1)
         data_combined = data_combined -273.15
 
@@ -164,4 +160,5 @@ class WeatherTransformer:
         indices = (start_date <= in_date_range) & (in_date_range <= end_date)
 
         return indices
+
 
