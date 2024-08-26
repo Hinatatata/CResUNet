@@ -1,26 +1,28 @@
 import os
 import pandas as pd
-
 from transformer.weather_transform import WeatherTransformer
 
 
 class DataCreator:
 
     def __init__(self, weather_raw_dir, start_date, end_date, spatial_range, target_dim, downsample_mode,
+                 area_name, train_period, val_period, test_period,
                  weather_freq=3, features=None, atm_dim=0, check_files=False,
                  rebuild=True, smooth=True, smooth_win_len=31):
 
-        self.data_dir = os.path.abspath(
-            os.path.dirname(os.path.abspath(__file__)))
+        # Data paths
+        self.data_dir = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
         self.data_dir = os.path.join(self.data_dir, 'data')
         self.weather_raw_dir = weather_raw_dir
 
+        # Parameters
         self.start_date = start_date
         self.end_date = end_date
         self.spatial_range = spatial_range
         self.weather_freq = weather_freq
         self.rebuild = rebuild
 
+        # weather transformer parameters
         self.check_files = check_files
         self.features = features
         self.atm_dim = atm_dim
@@ -37,7 +39,6 @@ class DataCreator:
             path_list = self.__get_file_paths(weather_folder)
             if len(path_list) == 0:
                 raise ValueError('{} folder is empty'.format(weather_folder))
-
             path_arr = self.__sort_files_by_date(paths=path_list)
 
         else:
