@@ -3,13 +3,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from copy import deepcopy
-import numpy as np
-import numpy.ma as ma
-import pickle as pkl
-from sklearn.metrics import mean_absolute_error
-from scipy.stats import pearsonr
-from sklearn.metrics import mean_squared_error
-from math import sqrt
 
 
 class Trainer:
@@ -35,9 +28,10 @@ class Trainer:
 
             if self.optimizer == "adam":
                 optimizer = optim.Adam(model.parameters(),
-                                       lr=self.learning_rate)
+                                       lr=self.learning_rate,
+                                       weight_decay=self.weight_decay,
+                                       )
             else:
-
                 optimizer = optim.SGD(model.parameters(),
                                       lr=self.learning_rate,
                                       momentum=self.momentum)
@@ -55,10 +49,8 @@ class Trainer:
         best_dict = model.state_dict()
 
         for epoch in range(self.num_epochs):
-            # train and validation loop
             start_time = time.time()
 
-            # train
             running_train_loss = self.__step_loop(model=model,
                                                   generator=batch_generator,
                                                   mode='train',
@@ -77,7 +69,6 @@ class Trainer:
             message_str = "\nEpoch: {}, Train_loss: {:.5f}, Validation_loss: {:.5f}, Took {:.3f} seconds."
             print(message_str.format(epoch + 1, running_train_loss, running_val_loss, epoch_time))
 
-            # save the losses
             train_loss.append(running_train_loss)
             val_loss.append(running_val_loss)
 
@@ -126,31 +117,35 @@ class Trainer:
         else:
             step_fun = self.__train_step
         idx = 0
+        loss_all = []
 
-        for idx, (x, y, f_x) in enumerate(generator.generate(mode)):
-            print('\r{}:{}/{}'.format(mode, idx, generator.num_iter(mode)),flush=True, end='')
+        for idx, (x, y) in enumerate(generator.generate(mode)):
 
+            print('\r{}:{}/{}'.format(mode, idx, generator.num_iter(mode)), flush=True, end='')
             if hasattr(model, 'hidden'):
                 hidden = model.init_hidden(batch_size)
             else:
                 hidden = None
 
             x, y = [self.__prep_input(i) for i in [x, y]]
-
             loss = step_fun(model=model,
-                            inputs=[x, y, f_x.float().to(self.device), hidden],
+                            inputs=[x, y, hidden],
                             optimizer=optimizer,
                             generator=generator,
                             )
+
             running_loss += loss
+
+        running_loss /= (idx + 1)
+        loss_all.append('%.5f' % running_loss)
 
         return running_loss
 
     def __train_step(self, model, inputs, optimizer, generator):
 
-        x, y, f_x, hidden = inputs
+        x, y, hidden = inputs
 
-        pred = model.forward(x=x, f_x=f_x, hidden=hidden)
+        pred = model.forward(x=x, hidden=hidden, y=y)
         loss = self.criterion(pred, y)
 
         if model.is_trainable:
@@ -165,19 +160,18 @@ class Trainer:
 
         de_norm_loss = self.criterion(pred, y)
         de_norm_loss = de_norm_loss.detach().cpu().numpy()
-        loss = loss.detach().cpu().numpy()
-        print(f"  loss: {de_norm_loss}")
 
         return de_norm_loss
 
     def __val_step(self, model, inputs, optimizer, generator):
 
-        x, y, f_x, hidden = inputs
-        pred = model.forward(x=x, f_x=f_x, hidden=hidden)
+        x, y, hidden = inputs
+        pred = model.forward(x=x, hidden=hidden, y=y)
         if generator.normalizer:
             pred = generator.normalizer.inv_norm(pred, self.device)
             y = generator.normalizer.inv_norm(y, self.device)
         loss = self.criterion(pred, y)
+
         return loss.detach().cpu().numpy()
 
     def __prep_input(self, x):
