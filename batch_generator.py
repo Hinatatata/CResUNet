@@ -4,10 +4,11 @@ from models.adaptive_normalizer import AdaptiveNormalizer
 
 class BatchGenerator:
 
-    def __init__(self, weather_data, val_ratio, test_ratio, normalize_flag, params):
-        self.weather_data = weather_data
-        self.val_ratio = val_ratio
-        self.test_ratio = test_ratio
+    def __init__(self, train_data, val_data, test_data, normalize_flag, params):
+        self.train_data = train_data
+        self.val_data = val_data
+        self.test_data = test_data
+
         self.dataset_params = params
         self.normalize_flag = normalize_flag
 
@@ -16,26 +17,15 @@ class BatchGenerator:
         else:
             self.normalizer = None
 
-        self.weather_dict = self.__split_data(self.weather_data)
+        self.weather_dict = self.__split_data(self.train_data, self.val_data, self.test_data)
         self.dataset_dict = self.__create_sets()
 
-    def __split_data(self, in_data):
+    def __split_data(self, train_data, val_data, test_data):
 
-        data_len = len(in_data)
-
-        import datetime
-
-        d1 = datetime.date(1995,1,1)
-        d2 = datetime.date(2017,12,31)
-        d3 = datetime.date(2019,12,31)
-        d4 = datetime.date(2020,1,1)
-        train_count=(d2 - d1).days+1
-        val_count  =(d3 - d2).days+1
-        test_count =(d4 - d3).days-2
         data_dict = {
-            'train': in_data[:train_count],
-            'val': in_data[train_count:train_count+val_count],
-            'test': in_data[train_count+val_count+test_count:train_count+val_count+test_count+21]
+            'train': train_data,
+            'val': val_data,
+            'test': test_data
         }
 
         return data_dict
