@@ -1,8 +1,6 @@
 import os
 import glob
-import torch
 import pickle as pkl
-
 from trainer import Trainer
 
 
@@ -22,10 +20,6 @@ def train(model_name, model, batch_generator, trainer_params, date_r, config, de
 
     train_val_loss = trainer.fit(model, batch_generator)
 
-    test_loss = trainer.transform(model, batch_generator)
-
-    train_val_loss += (test_loss, date_r)
-
     model = model.to("cpu")
 
     for path, obj in zip([loss_save_path, model_save_path, trainer_save_path, config_save_path],
@@ -37,24 +31,19 @@ def train(model_name, model, batch_generator, trainer_params, date_r, config, de
 
 def predict(model_name, batch_generator, device, exp_num=None):
 
+    # find the best model
     model, trainer = _find_best_model(model_name, exp_num=exp_num)
 
     model = model.to(device)
-    if model_name in ["convlstm"]:
-        model.device = device
-        for i in range(len(model.encoder)):
-            model.encoder[i].device = device
-            model.decoder[i].device = device
     trainer.device = device
     predict_loss = trainer.transform(model, batch_generator)
-
     return predict_loss
 
 
 def _find_best_model(model_name, exp_num=None):
     print("Selecting best model...")
-
-    exps_dir = os.path.join('results', model_name)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    exps_dir = os.path.join(current_dir, 'results', model_name)
 
     if exp_num:
         exps_dir = os.path.join(exps_dir, "exp_" + str(exp_num))
@@ -86,9 +75,10 @@ def _find_best_model(model_name, exp_num=None):
                         best_model = pkl.load(f)
                     with open(trainer_path, 'rb') as f:
                         trainer = pkl.load(f)
-            except Exception as e:
+            except  Exception as e:
                 pass
-    return  best_model, trainer
+
+    return best_model, trainer
 
 
 def _load_model(experiment_num):
