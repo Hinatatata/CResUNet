@@ -32,10 +32,10 @@ class AdaptiveNormalizer:
             aa = a.contiguous().view(a.size(0), -1)
 
             min_a = aa.min(dim=1, keepdim=True)[0]
-            aa -= min_a
-
             max_a = aa.max(dim=1, keepdim=True)[0]
-            aa /= max_a
+
+            aa -= min_a
+            aa /= (max_a - min_a)
 
             aa = aa.view(batch_size, seq_len, height, width)
             out.append(aa)
@@ -50,7 +50,7 @@ class AdaptiveNormalizer:
         batch_size, seq_len, height, width, d_dim = x.shape
         x = x.contiguous().view(x.size(0), -1)
         min_, max_ = self.min_max[self.output_dim]
-        x = x * max_.to(device)+ min_.to(device)
+        x = x * (max_.to(device) - min_.to(device)) + min_.to(device)
         x = x.view(batch_size, seq_len, height, width, d_dim)
         x = x.permute(0, 1, 4, 2, 3)
         return x
